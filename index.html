@@ -1850,7 +1850,12 @@ function batteryShifted(){
   return Math.min(surplus,night);
 }
 const solarMonthlyGeneration=()=>solarDailyGeneration()*RATES.daysInMonth;
-const solarSavings=(grossDaily=totalDaily())=>bill(grossDaily*RATES.daysInMonth).total-bill(netDailyUsage(grossDaily)*RATES.daysInMonth).total;
+function solarSavings(grossDaily=totalDaily()){
+  const netB=bill(netDailyUsage(grossDaily)*RATES.daysInMonth);
+  // Solar Only has no grid-minimum charge — you only pay for kWh actually drawn from grid
+  const netTotal=MODE==='solaronly'?netB.total-netB.base:netB.total;
+  return bill(grossDaily*RATES.daysInMonth).total-netTotal;
+}
 function renderSolar(){
   const size=solarSystemSize(),daily=solarDailyGeneration(),month=daily*RATES.daysInMonth,gross=totalDaily(),net=netDailyUsage(gross);
   document.querySelectorAll('#solarOptions button').forEach(b=>b.classList.toggle('on',b.dataset.size===SOLAR.selected));
@@ -2099,6 +2104,8 @@ function render(){
   const hd=document.getElementById('hudDaily');if(hd)hd.textContent=daily.toFixed(1);
   const hd2=document.getElementById('hudDaily2');if(hd2)hd2.textContent=daily.toFixed(1)+' kWh';
   const b=bill(netMonth);
+  // Solar Only: no grid-minimum — only pay for kWh actually drawn from grid (strip base top-up)
+  if(MODE==='solaronly'){b.total-=b.base;b.base=0;}
   // BUG-07 FIX: use money() so header and main panel show the same formatted value
   const hb=document.getElementById('hudBill');if(hb)hb.textContent=money(b.total);
   const hb2=document.getElementById('hudBill2');if(hb2)hb2.textContent=money(b.total);
@@ -2118,11 +2125,13 @@ function render(){
   bn.className='bignum'+(b.total>650?' bad':b.total>400?' warn':'');
   setGauge(b.total);
   const b20=bill(netDailyUsage(daily*.8)*RATES.daysInMonth);
+  if(MODE==='solaronly'){b20.total-=b20.base;b20.base=0;}
   document.getElementById('saveBill').textContent=money(b20.total);
   // BUG-13 FIX: when solar covers 100% of load the $0 savings message is confusing
-  const solarFullyCovered=MODE!=='grid'&&solarDailyGeneration()>=totalDaily();
+  // solaronly never has true full coverage (nighttime always draws grid) unless nothing is on
+  const solarFullyCovered=MODE!=='grid'&&netDailyUsage(daily)===0;
   document.getElementById('saveAmt').textContent=solarFullyCovered
-    ?'Solar covers full load — already at minimum bill'
+    ?(MODE==='solaronly'?'No grid draw — solar covers all daytime, nothing running at night':'Solar covers full load — already at minimum bill')
     :'You Save '+money(b.total-b20.total)+' / month';
   document.getElementById('breakdown').innerHTML=
     bl('Energy / Usage Charges',b.energy)+bl('Facilities Charge',b.facilities)+
