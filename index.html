@@ -211,7 +211,7 @@ select.speed{background:rgba(255,255,255,.1);color:#e2e8f0;border:1px solid rgba
 .solar-custom input{width:88px;border:1px solid var(--border);border-radius:7px;padding:7px 8px;font:700 12px 'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;color:var(--text)}
 .solar-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:9px}
 /* POWER MODE (3 phases) */
-.mode-options{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.mode-options{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .mode-options button{border:1px solid var(--border);background:#f8fafc;border-radius:7px;padding:9px 4px;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;transition:.15s}
 .mode-options button.on{background:#0284c7;color:#fff;border-color:#0369a1;box-shadow:0 0 10px rgba(2,132,199,.3)}
 #solarSizeWrap{transition:.2s}
@@ -1510,6 +1510,7 @@ header{border-radius:16px}
       <div class="mode-options" id="powerMode">
         <button type="button" data-mode="grid" class="on">⚡ Power</button>
         <button type="button" data-mode="solarbattery">☀️🔋 Solar &amp; Battery</button>
+        <button type="button" data-mode="solaronly">☀️ Solar Only</button>
       </div>
       <div id="solarSizeWrap" class="solar-controls disabled" style="margin-top:0">
         <p class="sub" style="margin-top:0">Rooftop PV size used for generation &amp; billing</p>
@@ -1591,7 +1592,7 @@ header{border-radius:16px}
       <div class="stat"><div class="k">System Size</div><div class="v" id="solarSizeV">5.0 kW</div></div>
       <div class="stat"><div class="k">Daily Generation</div><div class="v" id="solarDailyV">0.0</div><div class="sub" style="color:#4a6a85">kWh / day</div></div>
       <div class="stat"><div class="k">Monthly Generation</div><div class="v" id="solarMonthV">0</div><div class="sub" style="color:#4a6a85">kWh / month</div></div>
-      <div class="stat"><div class="k">Battery → Night Use</div><div class="v" id="solarBatteryV">0.0</div><div class="sub" style="color:#4a6a85">kWh / day</div></div>
+      <div class="stat"><div class="k" id="solarBatteryLabel">Battery → Night Use</div><div class="v" id="solarBatteryV">0.0</div><div class="sub" style="color:#4a6a85">kWh / day</div></div>
       <div class="stat"><div class="k">Monthly Savings</div><div class="v" id="solarSavingsV">$0.00</div></div>
       <div class="stat"><div class="k">CO2 Reduction</div><div class="v" id="solarCarbonV">0</div><div class="sub" style="color:#4a6a85">kg / month</div></div>
       <div class="stat"><div class="k">Net Grid Usage</div><div class="v" id="solarNetV">0</div><div class="sub" style="color:#4a6a85">kWh / month</div></div>
@@ -1762,7 +1763,7 @@ async function db_updateSession(extra={}){
       grade        :sc.g,
       score        :sc.s,
       solar_mode   :MODE,
-      solar_kw     :MODE==='solarbattery'?solarSystemSize():0,
+      solar_kw     :MODE!=='grid'?solarSystemSize():0,
       top_appliance:top?.name||'',
       carbon_kg    :Math.round(netDaily*RATES.daysInMonth*RATES.carbonKgPerKwh),
       ...extra
@@ -1820,7 +1821,7 @@ function bill(m){const e=energyCharge(m),f=m*RATES.far,fac=facilitiesCharge(m),r
   // BASE BILL FIX END
   return{energy:e,far:f,facilities:fac,ra,base,total:total};}
 // SOLAR FEATURE START
-// POWER MODE (2 options): 'grid' = power only, 'solarbattery' = solar PV + battery storage
+// POWER MODE (3 options): 'grid' = power only, 'solarbattery' = solar PV + battery, 'solaronly' = solar PV no battery
 let MODE='grid';
 const SOLAR={selected:'5',customSize:5,sunlightHours:5.5};
 const isNightMode=()=>document.getElementById('houseSvg')?.classList.contains('night');
@@ -1832,10 +1833,18 @@ function dayNightUsage(){let day=0,night=0;apps.forEach(a=>{const k=kwhDay(a);if
 // Battery: daytime surplus solar is stored and discharged at night,
 // so the FULL daily generation offsets the FULL daily usage.
 // Any remainder is drawn from the grid and billed (with the $25 base bill floor).
-const netDailyUsage=(grossDaily=totalDaily())=>MODE==='grid'?grossDaily:Math.max(0,grossDaily-solarDailyGeneration());
+function netDailyUsage(grossDaily=totalDaily()){
+  if(MODE==='grid')return grossDaily;
+  if(MODE==='solaronly'){
+    // No battery: solar offsets daytime only; night load always from grid
+    const{day,night}=dayNightUsage();
+    return night+Math.max(0,day-solarDailyGeneration());
+  }
+  return Math.max(0,grossDaily-solarDailyGeneration());
+}
 // kWh/day the battery shifts from daytime generation into night-time loads
 function batteryShifted(){
-  if(MODE==='grid')return 0;
+  if(MODE==='grid'||MODE==='solaronly')return 0;
   const{day,night}=dayNightUsage();
   const surplus=Math.max(0,solarDailyGeneration()-day);
   return Math.min(surplus,night);
@@ -1848,17 +1857,21 @@ function renderSolar(){
   document.querySelectorAll('#powerMode button').forEach(b=>b.classList.toggle('on',b.dataset.mode===MODE));
   const sizeWrap=document.getElementById('solarSizeWrap');if(sizeWrap)sizeWrap.classList.toggle('disabled',MODE==='grid');
   const modeTag=document.getElementById('solarModeTag');
-  if(modeTag)modeTag.textContent=MODE==='grid'?'⚡ Power Only':'☀️🔋 Solar & Battery';
+  if(modeTag)modeTag.textContent=MODE==='grid'?'⚡ Power Only':MODE==='solaronly'?'☀️ Solar Only':'☀️🔋 Solar & Battery';
   const prodTag=document.getElementById('solarProductionTag');if(prodTag)prodTag.textContent=daily.toFixed(1)+' kWh/day';
   const roofText=document.getElementById('solarRoofText');if(roofText)roofText.textContent=MODE==='grid'?'Solar OFF':'Solar '+daily.toFixed(1)+' kWh/day';
   const roof=document.getElementById('solarRoof');if(roof)roof.style.opacity=MODE==='grid'?.25:1;
   const flow=document.getElementById('solarFlow');if(flow)flow.style.opacity=(daily>0&&!isNightMode())?.95:0;
-  // Shortfall: solar + battery can't cover the whole load → remainder comes from grid
+  // Shortfall: solar can't cover the whole load → remainder comes from grid
   const short=document.getElementById('solarShortfall');
   if(short){
     if(MODE==='solarbattery'&&gross>daily){
       short.style.display='block';
       short.textContent='⚠ Solar & battery cover '+daily.toFixed(1)+' of '+gross.toFixed(1)+' kWh/day — the remaining '+(gross-daily).toFixed(1)+' kWh/day is drawn from the grid and billed.';
+    }else if(MODE==='solaronly'){
+      const{day,night}=dayNightUsage();const solarGen=solarDailyGeneration();const gridNight=night;const gridDay=Math.max(0,day-solarGen);
+      short.style.display='block';
+      short.textContent='☀️ Solar covers daytime load. Night use ('+night.toFixed(1)+' kWh/day) always comes from the grid — no battery to store surplus. Total grid: '+netDailyUsage(gross).toFixed(1)+' kWh/day.';
     }else short.style.display='none';
   }
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
@@ -1867,7 +1880,9 @@ function renderSolar(){
   set('solarSizeV',g?'—':size.toFixed(1)+' kW');
   set('solarDailyV',g?'—':daily.toFixed(1));
   set('solarMonthV',g?'—':Math.round(month).toLocaleString());
-  set('solarBatteryV',g?'—':batteryShifted().toFixed(1));
+  const batLabel=document.getElementById('solarBatteryLabel');
+  if(batLabel)batLabel.textContent=MODE==='solaronly'?'Battery Storage':'Battery → Night Use';
+  set('solarBatteryV',g||MODE==='solaronly'?'—':batteryShifted().toFixed(1));
   set('solarSavingsV',g?'—':money(solarSavings(gross)));
   set('solarCarbonV',g?'—':Math.round(Math.min(gross*RATES.daysInMonth,month)*RATES.carbonKgPerKwh).toLocaleString());
   set('solarNetV',g?'—':Math.round(net*RATES.daysInMonth).toLocaleString());
@@ -2105,7 +2120,7 @@ function render(){
   const b20=bill(netDailyUsage(daily*.8)*RATES.daysInMonth);
   document.getElementById('saveBill').textContent=money(b20.total);
   // BUG-13 FIX: when solar covers 100% of load the $0 savings message is confusing
-  const solarFullyCovered=MODE==='solarbattery'&&solarDailyGeneration()>=daily;
+  const solarFullyCovered=MODE!=='grid'&&solarDailyGeneration()>=totalDaily();
   document.getElementById('saveAmt').textContent=solarFullyCovered
     ?'Solar covers full load — already at minimum bill'
     :'You Save '+money(b.total-b20.total)+' / month';
@@ -2267,7 +2282,7 @@ function exportCSV(){
   let csv='Appliance,Watts,Hours/day,kWh/day,kWh/month,When\n';
   apps.forEach(a=>{csv+=`"${a.name}",${a.watts},${a.hours},${kwhDay(a).toFixed(3)},${(kwhDay(a)*30).toFixed(2)},${a.when}\n`;});
   csv+=`\nSolar PV,System Size (kW),Daily Generation (kWh),Monthly Generation (kWh),Monthly Savings ($),CO2 Reduction (kg)\nSolar PV,${solarSystemSize().toFixed(1)},${solarDailyGeneration().toFixed(2)},${solarMonthlyGeneration().toFixed(2)},${solarSavings(daily).toFixed(2)},${(Math.min(daily*RATES.daysInMonth,solarMonthlyGeneration())*RATES.carbonKgPerKwh).toFixed(0)}\n`;
-  csv+=`\nPower Mode,${MODE==='grid'?'Power Only':'Solar & Battery'}\n`;
+  csv+=`\nPower Mode,${MODE==='grid'?'Power Only':MODE==='solaronly'?'Solar Only':'Solar & Battery'}\n`;
   csv+=`\nBill Component,Amount ($)\nEnergy / Usage Charges,${b.energy.toFixed(2)}\nFacilities Charge,${b.facilities.toFixed(2)}\nFuel Adjustment Rate (FAR),${b.far.toFixed(2)}\nRegulatory Authority (RA) Fee,${b.ra.toFixed(2)}\nBase Service Charge,${(b.base||0).toFixed(2)}\nTotal Monthly Bill,${b.total.toFixed(2)}\n`;
   try{
     const url=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
