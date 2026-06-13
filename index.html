@@ -1835,11 +1835,7 @@ function dayNightUsage(){let day=0,night=0;apps.forEach(a=>{const k=kwhDay(a);if
 // Any remainder is drawn from the grid and billed (with the $25 base bill floor).
 function netDailyUsage(grossDaily=totalDaily()){
   if(MODE==='grid')return grossDaily;
-  if(MODE==='solaronly'){
-    // No battery: solar offsets daytime only; night load always from grid
-    const{day,night}=dayNightUsage();
-    return night+Math.max(0,day-solarDailyGeneration());
-  }
+  if(MODE==='solaronly')return 0; // completely off-grid — no BELCO connection, no grid draw
   return Math.max(0,grossDaily-solarDailyGeneration());
 }
 // kWh/day the battery shifts from daytime generation into night-time loads
@@ -1850,7 +1846,7 @@ function batteryShifted(){
   return Math.min(surplus,night);
 }
 const solarMonthlyGeneration=()=>solarDailyGeneration()*RATES.daysInMonth;
-const solarSavings=(grossDaily=totalDaily())=>bill(grossDaily*RATES.daysInMonth).total-bill(netDailyUsage(grossDaily)*RATES.daysInMonth).total;
+const solarSavings=(grossDaily=totalDaily())=>MODE==='solaronly'?bill(grossDaily*RATES.daysInMonth).total:bill(grossDaily*RATES.daysInMonth).total-bill(netDailyUsage(grossDaily)*RATES.daysInMonth).total;
 function renderSolar(){
   const size=solarSystemSize(),daily=solarDailyGeneration(),month=daily*RATES.daysInMonth,gross=totalDaily(),net=netDailyUsage(gross);
   document.querySelectorAll('#solarOptions button').forEach(b=>b.classList.toggle('on',b.dataset.size===SOLAR.selected));
@@ -1869,9 +1865,12 @@ function renderSolar(){
       short.style.display='block';
       short.textContent='⚠ Solar & battery cover '+daily.toFixed(1)+' of '+gross.toFixed(1)+' kWh/day — the remaining '+(gross-daily).toFixed(1)+' kWh/day is drawn from the grid and billed.';
     }else if(MODE==='solaronly'){
-      const{day,night}=dayNightUsage();const solarGen=solarDailyGeneration();const gridNight=night;const gridDay=Math.max(0,day-solarGen);
+      const{day,night}=dayNightUsage();const solarGen=solarDailyGeneration();
       short.style.display='block';
-      short.textContent='☀️ Solar covers daytime load. Night use ('+night.toFixed(1)+' kWh/day) always comes from the grid — no battery to store surplus. Total grid: '+netDailyUsage(gross).toFixed(1)+' kWh/day.';
+      const coveredDay=Math.min(day,solarGen).toFixed(1);
+      const nightMsg=night>0?' No electricity after dark ('+night.toFixed(1)+' kWh/day) — add a battery to cover night use.':'';
+      const shortfallMsg=day>solarGen?' Solar falls short by '+(day-solarGen).toFixed(1)+' kWh/day during the day.':'';
+      short.textContent='☀️ Completely off-grid — no BELCO bill. Solar covers '+coveredDay+' kWh/day during the day.'+nightMsg+shortfallMsg;
     }else short.style.display='none';
   }
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
@@ -2099,6 +2098,8 @@ function render(){
   const hd=document.getElementById('hudDaily');if(hd)hd.textContent=daily.toFixed(1);
   const hd2=document.getElementById('hudDaily2');if(hd2)hd2.textContent=daily.toFixed(1)+' kWh';
   const b=bill(netMonth);
+  // Solar Only is completely off-grid — no BELCO bill at all
+  if(MODE==='solaronly'){b.energy=0;b.far=0;b.facilities=0;b.ra=0;b.base=0;b.total=0;}
   // BUG-07 FIX: use money() so header and main panel show the same formatted value
   const hb=document.getElementById('hudBill');if(hb)hb.textContent=money(b.total);
   const hb2=document.getElementById('hudBill2');if(hb2)hb2.textContent=money(b.total);
@@ -2121,9 +2122,10 @@ function render(){
   document.getElementById('saveBill').textContent=money(b20.total);
   // BUG-13 FIX: when solar covers 100% of load the $0 savings message is confusing
   // solaronly never has true full coverage (nighttime always draws grid) unless nothing is on
-  const solarFullyCovered=MODE!=='grid'&&netDailyUsage(daily)===0;
-  document.getElementById('saveAmt').textContent=solarFullyCovered
-    ?(MODE==='solaronly'?'No grid draw — solar covers all daytime, nothing running at night':'Solar covers full load — already at minimum bill')
+  const solarFullyCovered=MODE==='solarbattery'&&netDailyUsage(daily)===0;
+  document.getElementById('saveAmt').textContent=MODE==='solaronly'
+    ?'You Save '+money(solarSavings(daily))+' vs grid / month'
+    :solarFullyCovered?'Solar covers full load — already at minimum bill'
     :'You Save '+money(b.total-b20.total)+' / month';
   document.getElementById('breakdown').innerHTML=
     bl('Energy / Usage Charges',b.energy)+bl('Facilities Charge',b.facilities)+
