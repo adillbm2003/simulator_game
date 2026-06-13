@@ -1850,11 +1850,7 @@ function batteryShifted(){
   return Math.min(surplus,night);
 }
 const solarMonthlyGeneration=()=>solarDailyGeneration()*RATES.daysInMonth;
-function solarSavings(grossDaily=totalDaily()){
-  const netB=bill(netDailyUsage(grossDaily)*RATES.daysInMonth);
-  if(MODE==='solaronly'){netB.total-=netB.facilities;netB.facilities=0;if(netB.total<RATES.baseBill){netB.total=RATES.baseBill;}else if(netB.total>=RATES.baseBill){/* no base top-up needed */}}
-  return bill(grossDaily*RATES.daysInMonth).total-netB.total;
-}
+const solarSavings=(grossDaily=totalDaily())=>MODE!=='grid'?bill(grossDaily*RATES.daysInMonth).total-RATES.baseBill:0;
 function renderSolar(){
   const size=solarSystemSize(),daily=solarDailyGeneration(),month=daily*RATES.daysInMonth,gross=totalDaily(),net=netDailyUsage(gross);
   document.querySelectorAll('#solarOptions button').forEach(b=>b.classList.toggle('on',b.dataset.size===SOLAR.selected));
@@ -2103,8 +2099,8 @@ function render(){
   const hd=document.getElementById('hudDaily');if(hd)hd.textContent=daily.toFixed(1);
   const hd2=document.getElementById('hudDaily2');if(hd2)hd2.textContent=daily.toFixed(1)+' kWh';
   const b=bill(netMonth);
-  // Solar Only: no grid infrastructure (facilities) charge — only pay per-kWh night usage, $25 min floor
-  if(MODE==='solaronly'){b.total-=b.facilities;b.facilities=0;if(b.total<RATES.baseBill){b.base=RATES.baseBill-b.total;b.total=RATES.baseBill;}else{b.base=0;}}
+  // All solar modes always bill at exactly $25 regardless of usage
+  if(MODE!=='grid'){b.energy=0;b.far=0;b.facilities=0;b.ra=0;b.base=RATES.baseBill;b.total=RATES.baseBill;}
   // BUG-07 FIX: use money() so header and main panel show the same formatted value
   const hb=document.getElementById('hudBill');if(hb)hb.textContent=money(b.total);
   const hb2=document.getElementById('hudBill2');if(hb2)hb2.textContent=money(b.total);
@@ -2124,7 +2120,7 @@ function render(){
   bn.className='bignum'+(b.total>650?' bad':b.total>400?' warn':'');
   setGauge(b.total);
   const b20=bill(netDailyUsage(daily*.8)*RATES.daysInMonth);
-  if(MODE==='solaronly'){b20.total-=b20.facilities;b20.facilities=0;if(b20.total<RATES.baseBill){b20.base=RATES.baseBill-b20.total;b20.total=RATES.baseBill;}else{b20.base=0;}}
+  if(MODE!=='grid'){b20.energy=0;b20.far=0;b20.facilities=0;b20.ra=0;b20.base=RATES.baseBill;b20.total=RATES.baseBill;}
   document.getElementById('saveBill').textContent=money(b20.total);
   // BUG-13 FIX: when solar covers 100% of load the $0 savings message is confusing
   // solaronly never has true full coverage (nighttime always draws grid) unless nothing is on
