@@ -1852,8 +1852,8 @@ function batteryShifted(){
 const solarMonthlyGeneration=()=>solarDailyGeneration()*RATES.daysInMonth;
 function solarSavings(grossDaily=totalDaily()){
   const netB=bill(netDailyUsage(grossDaily)*RATES.daysInMonth);
-  // Solar Only has no grid-minimum charge — you only pay for kWh actually drawn from grid
-  const netTotal=MODE==='solaronly'?netB.total-netB.base:netB.total;
+  // Solar Only with zero net: no minimum charge. With any grid draw, $25 min still applies.
+  const netTotal=(MODE==='solaronly'&&netDailyUsage(grossDaily)===0)?netB.total-netB.base:netB.total;
   return bill(grossDaily*RATES.daysInMonth).total-netTotal;
 }
 function renderSolar(){
@@ -2104,8 +2104,8 @@ function render(){
   const hd=document.getElementById('hudDaily');if(hd)hd.textContent=daily.toFixed(1);
   const hd2=document.getElementById('hudDaily2');if(hd2)hd2.textContent=daily.toFixed(1)+' kWh';
   const b=bill(netMonth);
-  // Solar Only: no grid-minimum — only pay for kWh actually drawn from grid (strip base top-up)
-  if(MODE==='solaronly'){b.total-=b.base;b.base=0;}
+  // Solar Only with zero net usage: no grid draw at all → $0 bill (no minimum). With any usage, $25 min still applies.
+  if(MODE==='solaronly'&&netMonth===0){b.total-=b.base;b.base=0;}
   // BUG-07 FIX: use money() so header and main panel show the same formatted value
   const hb=document.getElementById('hudBill');if(hb)hb.textContent=money(b.total);
   const hb2=document.getElementById('hudBill2');if(hb2)hb2.textContent=money(b.total);
@@ -2125,7 +2125,7 @@ function render(){
   bn.className='bignum'+(b.total>650?' bad':b.total>400?' warn':'');
   setGauge(b.total);
   const b20=bill(netDailyUsage(daily*.8)*RATES.daysInMonth);
-  if(MODE==='solaronly'){b20.total-=b20.base;b20.base=0;}
+  if(MODE==='solaronly'&&netDailyUsage(daily*0.8)===0){b20.total-=b20.base;b20.base=0;}
   document.getElementById('saveBill').textContent=money(b20.total);
   // BUG-13 FIX: when solar covers 100% of load the $0 savings message is confusing
   // solaronly never has true full coverage (nighttime always draws grid) unless nothing is on
