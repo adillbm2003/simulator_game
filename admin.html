@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Bermuda Energy Simulator</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{
+      --primary:#1e40af;--primary-l:#3b82f6;
+      --bg:#f8fafc;--card:#fff;--border:#e2e8f0;
+      --text:#0f172a;--muted:#64748b;
+      --green:#16a34a;--amber:#d97706;--red:#dc2626;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+    /* ── LOGIN ── */
+    #loginScreen{display:flex;align-items:center;justify-content:center;
+      min-height:100vh;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%)}
+    .login-card{background:#fff;border-radius:16px;padding:40px;width:100%;max-width:400px;
+      box-shadow:0 24px 60px rgba(0,0,0,.3)}
+    .login-logo{text-align:center;margin-bottom:28px}
+    .login-logo .icon{font-size:44px}
+    .login-logo h1{font-size:17px;font-weight:800;color:#0f172a;margin-top:10px}
+    .login-logo p{font-size:12px;color:#64748b;margin-top:4px}
+    .lf{margin-bottom:16px}
+    .lf label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;
+      letter-spacing:.06em;color:#475569;margin-bottom:6px}
+    .lf input{width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:8px;
+      font-size:14px;outline:none;transition:border-color .15s;font-family:inherit}
+    .lf input:focus{border-color:#3b82f6}
+    .login-btn{width:100%;padding:12px;background:linear-gradient(135deg,#1e40af,#2563eb);
+      color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;
+      cursor:pointer;margin-top:8px;transition:opacity .15s;font-family:inherit}
+    .login-btn:hover{opacity:.9}
+    .login-btn:disabled{opacity:.5;cursor:not-allowed}
+    .login-err{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;
+      border-radius:8px;padding:10px 14px;font-size:13px;margin-top:12px;display:none}
+    .login-err.show{display:block}
+
+    /* ── NAV ── */
+    #dashboard{display:none}
+    nav{background:#0f172a;color:#fff;padding:0 24px;height:56px;
+      display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:10;
+      box-shadow:0 2px 8px rgba(0,0,0,.3)}
+    .nav-brand{font-size:14px;font-weight:800;flex:1}
+    .nav-brand span{color:#38bdf8}
+    .live-wrap{display:flex;align-items:center;gap:6px}
+    .live-dot{width:8px;height:8px;border-radius:50%;background:#4ade80;
+      box-shadow:0 0 0 0 rgba(74,222,128,.4);animation:pulse 2s infinite}
+    .live-dot.off{background:#f87171;box-shadow:none;animation:none}
+    @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(74,222,128,.4)}50%{box-shadow:0 0 0 6px rgba(74,222,128,0)}}
+    .live-lbl{font-size:11px;color:#94a3b8}
+    .nav-user{font-size:12px;color:#94a3b8;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .logout-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);
+      color:#fff;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;
+      font-family:inherit;transition:background .15s;white-space:nowrap}
+    .logout-btn:hover{background:rgba(255,255,255,.2)}
+
+    /* ── CONTENT ── */
+    .content{max-width:1400px;margin:0 auto;padding:24px}
+
+    /* ── STATS ── */
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px}
+    .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 24px}
+    .stat-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+      color:var(--muted);margin-bottom:8px}
+    .stat-val{font-size:34px;font-weight:800;line-height:1}
+    .stat-sub{font-size:12px;color:var(--muted);margin-top:6px}
+    .stat.blue  .stat-val{color:#1e40af}
+    .stat.green .stat-val{color:#16a34a}
+    .stat.amber .stat-val{color:#d97706}
+    .stat.purple.stat-val{color:#7c3aed}
+    .stat.purple .stat-val{color:#7c3aed}
+
+    /* ── SECTION ── */
+    .section{background:var(--card);border:1px solid var(--border);border-radius:12px;
+      margin-bottom:24px;overflow:hidden}
+    .sec-head{padding:14px 20px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .sec-title{font-size:14px;font-weight:800;flex:1}
+    .sec-count{font-size:12px;color:var(--muted);background:#f1f5f9;
+      padding:3px 10px;border-radius:20px;white-space:nowrap}
+    .search{padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;
+      font-size:13px;outline:none;width:220px;font-family:inherit}
+    .search:focus{border-color:#3b82f6}
+    .exp-btn{padding:7px 14px;background:#f1f5f9;border:1px solid var(--border);
+      border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;
+      color:var(--text);font-family:inherit;transition:background .15s;white-space:nowrap}
+    .exp-btn:hover{background:#e2e8f0}
+
+    /* ── TABLE ── */
+    .tbl-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    thead th{background:#f8fafc;padding:10px 16px;text-align:left;
+      font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+      color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+    tbody tr{border-bottom:1px solid #f1f5f9;transition:background .1s}
+    tbody tr:last-child{border-bottom:none}
+    tbody tr:hover{background:#f8fafc}
+    td{padding:11px 16px;vertical-align:middle}
+    .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
+    .bg{background:#dcfce7;color:#15803d}
+    .bb{background:#dbeafe;color:#1d4ed8}
+    .ba{background:#fef3c7;color:#b45309}
+    .br{background:#fee2e2;color:#991b1b}
+    .bgr{background:#f1f5f9;color:#475569}
+    .new-row{animation:hl .9s ease-out}
+    @keyframes hl{from{background:#fef9c3}to{background:transparent}}
+    .empty{text-align:center;padding:48px;color:var(--muted);font-size:14px}
+    .tick{color:#16a34a;font-size:15px}
+    .dash{color:#cbd5e1}
+  </style>
+</head>
+<body>
+
+<!-- ════════ LOGIN ════════ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="icon">🌿</div>
+      <h1>Bermuda Home Energy Simulator</h1>
+      <p>Admin Dashboard &mdash; Department of Energy</p>
+    </div>
+    <div class="lf">
+      <label>Email Address</label>
+      <input type="email" id="lEmail" placeholder="admin@example.com">
+    </div>
+    <div class="lf">
+      <label>Password</label>
+      <input type="password" id="lPass" placeholder="••••••••">
+    </div>
+    <button class="login-btn" id="loginBtn">Sign In</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- ════════ DASHBOARD ════════ -->
+<div id="dashboard">
+  <nav>
+    <div class="nav-brand">Bermuda <span>Energy Simulator</span> &mdash; Admin</div>
+    <div class="live-wrap">
+      <div class="live-dot" id="liveDot"></div>
+      <div class="live-lbl" id="liveLbl">Connecting…</div>
+    </div>
+    <div class="nav-user" id="navUser"></div>
+    <button class="logout-btn" id="logoutBtn">Sign Out</button>
+  </nav>
+
+  <div class="content">
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat blue">
+        <div class="stat-lbl">Total Registrations</div>
+        <div class="stat-val" id="sUsers">—</div>
+        <div class="stat-sub">Users registered</div>
+      </div>
+      <div class="stat green">
+        <div class="stat-lbl">Simulations Run</div>
+        <div class="stat-val" id="sSims">—</div>
+        <div class="stat-sub">Completed 30-day runs</div>
+      </div>
+      <div class="stat amber">
+        <div class="stat-lbl">PDFs Exported</div>
+        <div class="stat-val" id="sPdfs">—</div>
+        <div class="stat-sub">Reports downloaded</div>
+      </div>
+      <div class="stat purple">
+        <div class="stat-lbl">CSVs Downloaded</div>
+        <div class="stat-val" id="sCsvs">—</div>
+        <div class="stat-sub">Data exports</div>
+      </div>
+    </div>
+
+    <!-- Users -->
+    <div class="section">
+      <div class="sec-head">
+        <div class="sec-title">Registered Users</div>
+        <span class="sec-count" id="uCount">0</span>
+        <input class="search" id="uSearch" type="text" placeholder="Search name or email…">
+        <button class="exp-btn" id="expBtn">⬇ Export CSV</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Full Name</th><th>Email</th><th>Phone</th>
+              <th>Institution</th><th>Age</th><th>Gender</th><th>Level</th>
+              <th>Interests</th><th>Registered</th>
+            </tr>
+          </thead>
+          <tbody id="uBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sessions -->
+    <div class="section">
+      <div class="sec-head">
+        <div class="sec-title">Sessions</div>
+        <span class="sec-count" id="sCount">0</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>User</th><th>Started</th><th>Grade</th><th>Score</th>
+              <th>Daily kWh</th><th>Monthly Bill</th><th>Solar Mode</th>
+              <th>Top Appliance</th><th>Sim Run</th><th>PDF</th><th>CSV</th>
+            </tr>
+          </thead>
+          <tbody id="sBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /dashboard -->
+
+<script>
+/* ── CONFIG ───────────────────────────────────────── */
+const SB_URL = 'https://jnyzqpkelsuiczsfzbbp.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpueXpxcGtlbHN1aWN6c2Z6YmJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjEyNzQsImV4cCI6MjA5NjkzNzI3NH0.7F74FksHdsYOSpYwMTglJvypRLouED6mNRPp5VCJAic';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+let allUsers    = [];
+let allSessions = [];
+let userMap     = {};   // id → full_name
+
+/* ── AUTH ─────────────────────────────────────────── */
+document.getElementById('loginBtn').addEventListener('click', doLogin);
+document.getElementById('lPass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await sb.auth.signOut(); location.reload();
+});
+
+async function doLogin() {
+  const email = document.getElementById('lEmail').value.trim();
+  const pass  = document.getElementById('lPass').value;
+  const btn   = document.getElementById('loginBtn');
+  const err   = document.getElementById('loginErr');
+  err.classList.remove('show');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) {
+    err.textContent = error.message; err.classList.add('show');
+    btn.disabled = false; btn.textContent = 'Sign In';
+    return;
+  }
+  showDash(data.user.email);
+}
+
+// Resume existing session on page load
+(async () => {
+  const { data } = await sb.auth.getSession();
+  if (data?.session) showDash(data.session.user.email);
+})();
+
+/* ── DASHBOARD ────────────────────────────────────── */
+async function showDash(email) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('dashboard').style.display   = 'block';
+  document.getElementById('navUser').textContent        = email;
+  await loadAll();
+  subscribeRealtime();
+}
+
+async function loadAll() {
+  const [ur, sr] = await Promise.all([
+    sb.from('users').select('*').order('registered_at', { ascending: false }),
+    sb.from('sessions').select('*').order('started_at', { ascending: false })
+  ]);
+  allUsers    = ur.data || [];
+  allSessions = sr.data || [];
+  userMap     = Object.fromEntries(allUsers.map(u => [u.id, u.full_name]));
+  renderStats(); renderUsers(); renderSessions();
+}
+
+/* ── STATS ────────────────────────────────────────── */
+function renderStats() {
+  set('sUsers', allUsers.length);
+  set('sSims',  allSessions.filter(s => s.ran_simulation).length);
+  set('sPdfs',  allSessions.filter(s => s.exported_pdf).length);
+  set('sCsvs',  allSessions.filter(s => s.exported_csv).length);
+}
+function set(id, v) { document.getElementById(id).textContent = v; }
+
+/* ── USERS TABLE ──────────────────────────────────── */
+function renderUsers(q = '') {
+  const rows = q
+    ? allUsers.filter(u =>
+        (u.full_name || '').toLowerCase().includes(q) ||
+        (u.email     || '').toLowerCase().includes(q))
+    : allUsers;
+  set('uCount', rows.length);
+  const tb = document.getElementById('uBody');
+  if (!rows.length) { tb.innerHTML = `<tr><td colspan="10"><div class="empty">No registrations yet — they will appear here in real time.</div></td></tr>`; return; }
+  tb.innerHTML = rows.map((u, i) => `
+    <tr>
+      <td style="color:var(--muted);font-size:12px">${i+1}</td>
+      <td><strong>${x(u.full_name)}</strong></td>
+      <td>${x(u.email)}</td>
+      <td>${x(u.phone) || `<span class="dash">—</span>`}</td>
+      <td>${x(u.institution) || `<span class="dash">—</span>`}</td>
+      <td>${u.age_bracket ? `<span class="badge bb">${x(u.age_bracket)}</span>` : '—'}</td>
+      <td>${x(u.gender) || '—'}</td>
+      <td>${u.learner_level ? `<span class="badge bgr">${x(u.learner_level)}</span>` : '—'}</td>
+      <td style="max-width:160px;white-space:normal;font-size:12px">${x(u.interests) || '—'}</td>
+      <td style="color:var(--muted);white-space:nowrap;font-size:12px">${dt(u.registered_at)}</td>
+    </tr>`).join('');
+}
+
+document.getElementById('uSearch').addEventListener('input', e =>
+  renderUsers(e.target.value.toLowerCase().trim()));
+
+/* ── SESSIONS TABLE ───────────────────────────────── */
+function renderSessions() {
+  set('sCount', allSessions.length);
+  const tb = document.getElementById('sBody');
+  if (!allSessions.length) { tb.innerHTML = `<tr><td colspan="11"><div class="empty">No sessions yet.</div></td></tr>`; return; }
+  tb.innerHTML = allSessions.map(s => `
+    <tr>
+      <td><strong>${x(userMap[s.user_id] || '—')}</strong></td>
+      <td style="color:var(--muted);white-space:nowrap;font-size:12px">${dt(s.started_at)}</td>
+      <td>${gradeBadge(s.grade)}</td>
+      <td>${s.score != null ? s.score : '—'}</td>
+      <td>${s.daily_kwh    != null ? s.daily_kwh + ' kWh' : '—'}</td>
+      <td>${s.monthly_bill != null ? '$' + Number(s.monthly_bill).toFixed(2) : '—'}</td>
+      <td>${s.solar_mode === 'solarbattery'
+            ? `<span class="badge bg">Solar+Battery</span>`
+            : `<span class="badge bgr">Grid</span>`}</td>
+      <td style="font-size:12px">${x(s.top_appliance) || '—'}</td>
+      <td>${tick(s.ran_simulation)}</td>
+      <td>${tick(s.exported_pdf)}</td>
+      <td>${tick(s.exported_csv)}</td>
+    </tr>`).join('');
+}
+
+/* ── REALTIME ─────────────────────────────────────── */
+function subscribeRealtime() {
+  sb.channel('admin-realtime')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, ({ new: row }) => {
+      allUsers.unshift(row);
+      userMap[row.id] = row.full_name;
+      renderStats();
+      renderUsers(document.getElementById('uSearch').value.toLowerCase().trim());
+      flash('uBody');
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, ({ new: row }) => {
+      const i = allSessions.findIndex(s => s.id === row.id);
+      if (i >= 0) allSessions[i] = row; else allSessions.unshift(row);
+      renderStats(); renderSessions();
+    })
+    .subscribe(status => {
+      const dot = document.getElementById('liveDot');
+      const lbl = document.getElementById('liveLbl');
+      if (status === 'SUBSCRIBED') {
+        dot.classList.remove('off'); lbl.textContent = 'Live';
+      } else {
+        dot.classList.add('off');
+        lbl.textContent = status === 'CHANNEL_ERROR' ? 'Error' : 'Reconnecting…';
+      }
+    });
+}
+
+function flash(tbodyId) {
+  const first = document.getElementById(tbodyId)?.querySelector('tr');
+  if (first) { first.classList.remove('new-row'); void first.offsetWidth; first.classList.add('new-row'); }
+}
+
+/* ── EXPORT CSV ───────────────────────────────────── */
+document.getElementById('expBtn').addEventListener('click', () => {
+  const cols = ['full_name','email','phone','institution','age_bracket','gender','learner_level','interests','consented','registered_at'];
+  const csv  = [cols.join(','), ...allUsers.map(u => cols.map(c => JSON.stringify(u[c] ?? '')).join(','))].join('\n');
+  const a    = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })),
+    download: 'bermuda-registrations-' + new Date().toISOString().slice(0,10) + '.csv'
+  });
+  a.click();
+});
+
+/* ── HELPERS ──────────────────────────────────────── */
+function x(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function dt(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+function gradeBadge(g) {
+  if (!g) return '—';
+  const cls = { A:'bg', B:'bb', C:'ba', D:'ba', F:'bgr' }[g] || 'bgr';
+  return `<span class="badge ${cls}">${g}</span>`;
+}
+function tick(v) {
+  return v ? `<span class="tick">✓</span>` : `<span class="dash">—</span>`;
+}
+</script>
+</body>
+</html>
