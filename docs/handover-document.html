@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Project Handover Document — Bermuda Home Energy Simulator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;color:#0f172a;background:#fff;font-size:14px;line-height:1.6}
+
+  /* COVER */
+  .cover{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%);color:#fff;
+    min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+    align-items:center;text-align:center;padding:60px 40px;page-break-after:always}
+  .cover .leaf{font-size:72px;margin-bottom:24px}
+  .cover h1{font-size:36px;font-weight:800;line-height:1.2;margin-bottom:12px}
+  .cover h2{font-size:18px;font-weight:400;color:#93c5fd;margin-bottom:40px}
+  .cover-meta{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+    border-radius:12px;padding:24px 40px;display:inline-block;text-align:left;margin-top:20px}
+  .cover-meta table{border-collapse:collapse}
+  .cover-meta td{padding:6px 20px 6px 0;color:#cbd5e1;font-size:13px}
+  .cover-meta td:first-child{color:#fff;font-weight:600;white-space:nowrap}
+  .confidential{margin-top:40px;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.1em}
+
+  /* CONTENT */
+  .page{max-width:860px;margin:0 auto;padding:60px 40px}
+  @media print{.page{padding:40px 30px}}
+
+  h1.section{font-size:22px;font-weight:800;color:#0f172a;border-bottom:3px solid #1e40af;
+    padding-bottom:10px;margin:48px 0 24px}
+  h2.sub{font-size:16px;font-weight:700;color:#1e40af;margin:32px 0 12px}
+  h3.minor{font-size:14px;font-weight:600;color:#334155;margin:20px 0 8px}
+  p{margin-bottom:12px;color:#374151}
+  ul,ol{padding-left:20px;margin-bottom:12px}
+  li{margin-bottom:6px;color:#374151}
+
+  /* CARDS */
+  .card-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:20px 0}
+  .card{border:1.5px solid #e2e8f0;border-radius:10px;padding:16px 20px}
+  .card-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:6px}
+  .card-value{font-size:14px;font-weight:700;color:#0f172a;word-break:break-all}
+  .card-value a{color:#1e40af;text-decoration:none}
+  .card.blue{border-color:#bfdbfe;background:#eff6ff}
+  .card.green{border-color:#bbf7d0;background:#f0fdf4}
+  .card.amber{border-color:#fde68a;background:#fffbeb}
+  .card.purple{border-color:#ddd6fe;background:#f5f3ff}
+
+  /* CRED BOX */
+  .cred-box{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:20px 24px;margin:16px 0;font-family:'Courier New',monospace;font-size:13px}
+  .cred-box .cred-row{display:flex;gap:16px;padding:4px 0;border-bottom:1px solid #1e293b}
+  .cred-box .cred-row:last-child{border-bottom:none}
+  .cred-box .cred-key{color:#94a3b8;min-width:160px;flex-shrink:0}
+  .cred-box .cred-val{color:#38bdf8;word-break:break-all}
+  .cred-box .cred-val.green{color:#4ade80}
+  .cred-box .cred-val.amber{color:#fbbf24}
+
+  /* TABLE */
+  .data-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px}
+  .data-table th{background:#f8fafc;padding:10px 14px;text-align:left;font-size:11px;
+    font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748b;
+    border:1px solid #e2e8f0}
+  .data-table td{padding:10px 14px;border:1px solid #e2e8f0;vertical-align:top}
+  .data-table tr:nth-child(even) td{background:#f8fafc}
+
+  /* BADGE */
+  .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600}
+  .badge-blue{background:#dbeafe;color:#1d4ed8}
+  .badge-green{background:#dcfce7;color:#15803d}
+  .badge-amber{background:#fef3c7;color:#b45309}
+  .badge-red{background:#fee2e2;color:#991b1b}
+
+  /* STEP */
+  .steps{counter-reset:step;margin:16px 0}
+  .step{display:flex;gap:16px;margin-bottom:16px;align-items:flex-start}
+  .step-num{background:#1e40af;color:#fff;border-radius:50%;width:28px;height:28px;
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:2px}
+  .step-body{flex:1}
+  .step-title{font-weight:600;color:#0f172a;margin-bottom:4px}
+
+  /* ALERT */
+  .alert{border-radius:8px;padding:14px 18px;margin:16px 0;display:flex;gap:12px}
+  .alert.info{background:#eff6ff;border:1px solid #bfdbfe}
+  .alert.warn{background:#fffbeb;border:1px solid #fde68a}
+  .alert.danger{background:#fef2f2;border:1px solid #fecaca}
+  .alert-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+  .alert-body{font-size:13px;color:#374151}
+  .alert-body strong{display:block;margin-bottom:4px}
+
+  /* ARCH */
+  .arch{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;
+    padding:24px;font-family:'Courier New',monospace;font-size:12px;
+    color:#334155;line-height:2;margin:16px 0}
+
+  /* FOOTER */
+  .footer{text-align:center;padding:40px;color:#94a3b8;font-size:12px;border-top:1px solid #e2e8f0;margin-top:60px}
+
+  /* PRINT */
+  @media print{
+    .cover{min-height:auto;padding:80px 60px}
+    h1.section{page-break-before:always}
+    h1.section:first-of-type{page-break-before:avoid}
+    .no-break{page-break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="cover">
+  <div class="leaf">🌿</div>
+  <h1>Bermuda Home Energy Simulator</h1>
+  <h2>Project Handover Document</h2>
+  <div class="cover-meta">
+    <table>
+      <tr><td>Client</td><td>Bermuda Department of Energy</td></tr>
+      <tr><td>Domain</td><td>energy.bm</td></tr>
+      <tr><td>Prepared By</td><td>Development Team</td></tr>
+      <tr><td>Date</td><td>June 2026</td></tr>
+      <tr><td>Version</td><td>1.0 — Production Release</td></tr>
+      <tr><td>Classification</td><td>Confidential</td></tr>
+    </table>
+  </div>
+  <p class="confidential">This document contains credentials and sensitive configuration — handle securely</p>
+</div>
+
+<div class="page">
+
+<!-- 1. OVERVIEW -->
+<h1 class="section">1. Project Overview</h1>
+<p>The <strong>Bermuda Home Energy Simulator</strong> is an interactive web-based educational tool built for the Bermuda Department of Energy. It allows residents and students to simulate their home energy consumption using real 2026 BELCO electricity tariff rates, explore solar and battery options, and generate personalised energy reports.</p>
+<p>Every user who accesses the simulator is required to register before use. Registration data is captured automatically and stored in a secure cloud database, giving the Department full visibility into who is using the tool and how.</p>
+
+<h2 class="sub">Key Features</h2>
+<ul>
+  <li>18-appliance home energy simulation with BELCO 2026 tiered tariff rates</li>
+  <li>Solar PV + battery storage mode with net metering calculation</li>
+  <li>30-day animated simulation playback</li>
+  <li>Efficiency grade scoring (A–F) with monthly bill estimates</li>
+  <li>PDF report export and CSV data download</li>
+  <li>Mandatory registration popup — captures name, email, institution, age, gender, learner level, and area of interest</li>
+  <li>Real-time admin dashboard for monitoring all registrations and sessions</li>
+</ul>
+
+<!-- 2. LIVE URLS -->
+<h1 class="section">2. Live URLs</h1>
+<div class="card-row">
+  <div class="card blue">
+    <div class="card-label">Simulator (Custom Domain)</div>
+    <div class="card-value"><a href="https://simulator.energy.bm">simulator.energy.bm</a></div>
+  </div>
+  <div class="card blue">
+    <div class="card-label">Simulator (Vercel URL)</div>
+    <div class="card-value"><a href="https://simulatorgame.vercel.app">simulatorgame.vercel.app</a></div>
+  </div>
+  <div class="card green">
+    <div class="card-label">Admin Dashboard</div>
+    <div class="card-value"><a href="https://simulatorgame.vercel.app/admin">simulatorgame.vercel.app/admin</a></div>
+  </div>
+  <div class="card amber">
+    <div class="card-label">Admin Dashboard (Custom Domain)</div>
+    <div class="card-value"><a href="https://simulator.energy.bm/admin">simulator.energy.bm/admin</a></div>
+  </div>
+</div>
+
+<div class="alert warn">
+  <div class="alert-icon">⏱</div>
+  <div class="alert-body"><strong>DNS Propagation</strong>The custom domain <code>simulator.energy.bm</code> was configured on 14 June 2026. DNS changes can take up to 24–72 hours to fully propagate worldwide. Until then, use the Vercel URL above.</div>
+</div>
+
+<!-- 3. TECHNOLOGY STACK -->
+<h1 class="section">3. Technology Stack</h1>
+<table class="data-table">
+  <thead><tr><th>Component</th><th>Technology</th><th>Purpose</th><th>Cost</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Simulator</strong></td><td>Single-file HTML + JavaScript</td><td>Energy simulation, UI, PDF/CSV export</td><td>Free</td></tr>
+    <tr><td><strong>Admin Dashboard</strong></td><td>Single-file HTML + JavaScript</td><td>Client monitoring and reporting interface</td><td>Free</td></tr>
+    <tr><td><strong>Database</strong></td><td>Supabase (PostgreSQL)</td><td>Stores user registrations and sessions</td><td>Free tier</td></tr>
+    <tr><td><strong>Hosting</strong></td><td>Vercel</td><td>Serves both HTML files globally via CDN</td><td>Free tier</td></tr>
+    <tr><td><strong>Source Control</strong></td><td>GitHub</td><td>Version history and deployment trigger</td><td>Free</td></tr>
+    <tr><td><strong>Domain</strong></td><td>Bermuda NIC (energy.bm)</td><td>Custom subdomain for branding</td><td>Existing</td></tr>
+  </tbody>
+</table>
+
+<!-- 4. SYSTEM ARCHITECTURE -->
+<h1 class="section">4. System Architecture</h1>
+<div class="arch">
+  User's Browser
+       │
+       ▼
+  simulator.energy.bm  ──CNAME──▶  simulatorgame.vercel.app
+       │                                    │
+       │                              Vercel CDN
+       │                          (serves index.html
+       │                            and admin.html)
+       │
+       ├── On Registration ──▶  Supabase REST API
+       │                              │
+       │                        PostgreSQL DB
+       │                        ┌──────────────┐
+       │                        │ users table  │
+       │                        │ sessions tbl │
+       │                        └──────────────┘
+       │                              │
+       └── Admin Dashboard ───────────┘
+           (reads data + live
+            WebSocket updates)
+</div>
+
+<p>No backend server is required. The simulator and admin dashboard are static HTML files served directly from Vercel's global CDN. All data flows directly between the browser and Supabase using secure API calls.</p>
+
+<!-- 5. CREDENTIALS & ACCESS -->
+<h1 class="section">5. Credentials &amp; Access</h1>
+
+<div class="alert danger">
+  <div class="alert-icon">🔐</div>
+  <div class="alert-body"><strong>Security Notice</strong>Store this document securely. Do not share these credentials publicly or via unsecured email. Change passwords immediately if you suspect they have been compromised.</div>
+</div>
+
+<h2 class="sub">5.1 Admin Dashboard Login</h2>
+<p>The client uses this to log in and view all registrations at <strong>simulatorgame.vercel.app/admin</strong></p>
+<div class="cred-box">
+  <div class="cred-row"><span class="cred-key">URL</span><span class="cred-val green">https://simulatorgame.vercel.app/admin</span></div>
+  <div class="cred-row"><span class="cred-key">Email</span><span class="cred-val amber">[Admin email set in Supabase Auth]</span></div>
+  <div class="cred-row"><span class="cred-key">Password</span><span class="cred-val amber">[Password set in Supabase Auth]</span></div>
+</div>
+
+<h2 class="sub">5.2 Supabase (Database)</h2>
+<div class="cred-box">
+  <div class="cred-row"><span class="cred-key">Dashboard URL</span><span class="cred-val green">https://supabase.com/dashboard/project/jnyzqpkelsuiczsfzbbp</span></div>
+  <div class="cred-row"><span class="cred-key">Project Name</span><span class="cred-val">bermuda-energy-simulator</span></div>
+  <div class="cred-row"><span class="cred-key">Project URL</span><span class="cred-val">https://jnyzqpkelsuiczsfzbbp.supabase.co</span></div>
+  <div class="cred-row"><span class="cred-key">Anon Public Key</span><span class="cred-val amber">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpueXpxcGtlbHN1aWN6c2Z6YmJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjEyNzQsImV4cCI6MjA5NjkzNzI3NH0.7F74FksHdsYOSpYwMTglJvypRLouED6mNRPp5VCJAic</span></div>
+  <div class="cred-row"><span class="cred-key">Login Email</span><span class="cred-val amber">[Supabase account email]</span></div>
+</div>
+
+<h2 class="sub">5.3 Vercel (Hosting)</h2>
+<div class="cred-box">
+  <div class="cred-row"><span class="cred-key">Dashboard URL</span><span class="cred-val green">https://vercel.com/abesaveni-6745s-projects/simulator_game</span></div>
+  <div class="cred-row"><span class="cred-key">Account</span><span class="cred-val">abesaveni-6745</span></div>
+  <div class="cred-row"><span class="cred-key">Project Name</span><span class="cred-val">simulator_game</span></div>
+  <div class="cred-row"><span class="cred-key">Production URL</span><span class="cred-val green">https://simulatorgame.vercel.app</span></div>
+</div>
+
+<h2 class="sub">5.4 GitHub (Source Code)</h2>
+<div class="cred-box">
+  <div class="cred-row"><span class="cred-key">Repository URL</span><span class="cred-val green">https://github.com/adillbm2003/simulator_game</span></div>
+  <div class="cred-row"><span class="cred-key">Account</span><span class="cred-val">adillbm2003</span></div>
+  <div class="cred-row"><span class="cred-key">Branch</span><span class="cred-val">master</span></div>
+</div>
+
+<h2 class="sub">5.5 Bermuda NIC (DNS)</h2>
+<div class="cred-box">
+  <div class="cred-row"><span class="cred-key">Control Panel</span><span class="cred-val green">https://manage.bermudanic.bm</span></div>
+  <div class="cred-row"><span class="cred-key">Admin Area</span><span class="cred-val">energy@gov.bm</span></div>
+  <div class="cred-row"><span class="cred-key">Domain</span><span class="cred-val">energy.bm</span></div>
+  <div class="cred-row"><span class="cred-key">CNAME Record</span><span class="cred-val">simulator.energy.bm → cname.vercel-dns.com</span></div>
+</div>
+
+<!-- 6. FILE STRUCTURE -->
+<h1 class="section">6. File Structure</h1>
+<div class="arch">
+simulator_game/               ← GitHub repository root
+├── index.html                ← Main energy simulator (2,580+ lines)
+├── admin.html                ← Admin dashboard
+├── vercel.json               ← Vercel routing config
+└── docs/
+    ├── handover-document.html  ← This document
+    └── training-guide.html     ← Client training guide
+
+Local development copy:
+C:\Users\USER\simulator_game\
+</div>
+
+<!-- 7. DATABASE SCHEMA -->
+<h1 class="section">7. Database Schema</h1>
+<h2 class="sub">users table — registration data</h2>
+<table class="data-table">
+  <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code>id</code></td><td>UUID</td><td>Unique identifier (auto-generated)</td></tr>
+    <tr><td><code>full_name</code></td><td>TEXT</td><td>User's full name (required)</td></tr>
+    <tr><td><code>email</code></td><td>TEXT</td><td>Email address (required)</td></tr>
+    <tr><td><code>phone</code></td><td>TEXT</td><td>Phone number (optional)</td></tr>
+    <tr><td><code>institution</code></td><td>TEXT</td><td>School or organisation (optional)</td></tr>
+    <tr><td><code>age_bracket</code></td><td>TEXT</td><td>Under 18 / 18–24 / 25–34 / 35+</td></tr>
+    <tr><td><code>gender</code></td><td>TEXT</td><td>M / F / Other</td></tr>
+    <tr><td><code>learner_level</code></td><td>TEXT</td><td>High School / College / Adult Learner</td></tr>
+    <tr><td><code>interests</code></td><td>TEXT</td><td>Comma-separated: Law, Analytics, Geography, IT, Finance</td></tr>
+    <tr><td><code>consented</code></td><td>BOOLEAN</td><td>Data consent confirmed (always true)</td></tr>
+    <tr><td><code>registered_at</code></td><td>TIMESTAMPTZ</td><td>Date and time of registration</td></tr>
+  </tbody>
+</table>
+
+<h2 class="sub">sessions table — usage tracking</h2>
+<table class="data-table">
+  <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code>id</code></td><td>UUID</td><td>Session identifier</td></tr>
+    <tr><td><code>user_id</code></td><td>UUID</td><td>Links to users.id</td></tr>
+    <tr><td><code>started_at</code></td><td>TIMESTAMPTZ</td><td>When the simulator was opened</td></tr>
+    <tr><td><code>completed_at</code></td><td>TIMESTAMPTZ</td><td>When the 30-day simulation finished</td></tr>
+    <tr><td><code>daily_kwh</code></td><td>NUMERIC</td><td>Simulated daily energy use</td></tr>
+    <tr><td><code>monthly_bill</code></td><td>NUMERIC</td><td>Estimated monthly bill ($)</td></tr>
+    <tr><td><code>grade</code></td><td>TEXT</td><td>Efficiency grade: A / B / C / D / F</td></tr>
+    <tr><td><code>score</code></td><td>INT</td><td>Efficiency score 0–100</td></tr>
+    <tr><td><code>solar_mode</code></td><td>TEXT</td><td>grid or solarbattery</td></tr>
+    <tr><td><code>solar_kw</code></td><td>NUMERIC</td><td>Solar panel size in kW</td></tr>
+    <tr><td><code>top_appliance</code></td><td>TEXT</td><td>Highest energy-consuming appliance</td></tr>
+    <tr><td><code>ran_simulation</code></td><td>BOOLEAN</td><td>Did user run the 30-day simulation?</td></tr>
+    <tr><td><code>exported_pdf</code></td><td>BOOLEAN</td><td>Did user download PDF report?</td></tr>
+    <tr><td><code>exported_csv</code></td><td>BOOLEAN</td><td>Did user download CSV data?</td></tr>
+  </tbody>
+</table>
+
+<!-- 8. HOW TO UPDATE -->
+<h1 class="section">8. How to Update &amp; Deploy</h1>
+<p>Any changes to the simulator or admin dashboard are deployed by editing the files and pushing to GitHub. Vercel automatically detects the push and deploys within 60 seconds.</p>
+
+<h2 class="sub">Update Process</h2>
+<div class="steps">
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <div class="step-title">Edit the file</div>
+      Open <code>C:\Users\USER\simulator_game\index.html</code> (simulator) or <code>admin.html</code> (dashboard) in any text editor or VS Code.
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <div class="step-title">Open terminal in project folder</div>
+      <code>cd C:\Users\USER\simulator_game</code>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <div class="step-title">Commit and push</div>
+      <code>git add . &amp;&amp; git commit -m "describe your change" &amp;&amp; git push</code>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <div class="step-title">Vercel auto-deploys</div>
+      Visit <a href="https://vercel.com/abesaveni-6745s-projects/simulator_game">vercel.com/abesaveni-6745s-projects/simulator_game</a> to monitor the deployment. Live within ~60 seconds.
+    </div>
+  </div>
+</div>
+
+<!-- 9. MAINTENANCE -->
+<h1 class="section">9. Maintenance &amp; Renewals</h1>
+<table class="data-table">
+  <thead><tr><th>Item</th><th>Provider</th><th>Renewal Date</th><th>Action Required</th></tr></thead>
+  <tbody>
+    <tr><td>Supabase Free Tier</td><td>Supabase</td><td>Ongoing (free)</td><td>Monitor storage — free tier includes 500MB database and 50,000 monthly active users</td></tr>
+    <tr><td>Vercel Free Tier</td><td>Vercel</td><td>Ongoing (free)</td><td>100GB bandwidth/month free — monitor if traffic is high</td></tr>
+    <tr><td>GitHub Repository</td><td>GitHub</td><td>Ongoing (free)</td><td>None — public repository</td></tr>
+    <tr><td>Supabase Anon Key JWT</td><td>Supabase</td><td>Year 2096</td><td>No action needed for many years</td></tr>
+    <tr><td>energy.bm domain</td><td>Bermuda NIC</td><td>Check with registrar</td><td>Renew domain registration as needed</td></tr>
+    <tr><td>BELCO Tariff Rates</td><td>BELCO</td><td>Annually</td><td>Update rates in index.html when BELCO publishes new tariffs</td></tr>
+  </tbody>
+</table>
+
+<!-- 10. TROUBLESHOOTING -->
+<h1 class="section">10. Troubleshooting</h1>
+<table class="data-table">
+  <thead><tr><th>Problem</th><th>Likely Cause</th><th>Solution</th></tr></thead>
+  <tbody>
+    <tr><td>simulator.energy.bm not loading</td><td>DNS not yet propagated</td><td>Use simulatorgame.vercel.app instead. Wait up to 72 hours.</td></tr>
+    <tr><td>Registration not saving to database</td><td>Supabase project paused (free tier pauses after 1 week of inactivity)</td><td>Log in to supabase.com and click "Restore project"</td></tr>
+    <tr><td>Admin dashboard shows no data after login</td><td>SELECT permission missing for authenticated role</td><td>Run: <code>GRANT SELECT ON TABLE public.users TO authenticated;</code> in Supabase SQL Editor</td></tr>
+    <tr><td>PDF export fails</td><td>No internet connection to load jsPDF library</td><td>The simulator requires internet access to generate PDFs</td></tr>
+    <tr><td>Admin can't log in</td><td>Wrong password or account deactivated</td><td>Go to Supabase → Authentication → Users → reset password</td></tr>
+    <tr><td>Live dot shows "Reconnecting"</td><td>Realtime tables not in publication</td><td>Run: <code>ALTER PUBLICATION supabase_realtime ADD TABLE public.users;</code></td></tr>
+  </tbody>
+</table>
+
+<div class="footer">
+  <p>Bermuda Home Energy Simulator — Project Handover Document v1.0 — June 2026</p>
+  <p style="margin-top:6px">Bermuda Department of Energy | energy.bm | Confidential</p>
+</div>
+
+</div><!-- /page -->
+</body>
+</html>
