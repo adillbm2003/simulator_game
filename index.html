@@ -429,28 +429,7 @@ header{border-radius:16px}
     </div>
     <div class="sheet-b">
 
-      <p class="reg-intro">Please complete the form below before you begin. Your details help the <strong style="color:#4ade80">Bermuda Department of Energy</strong> understand who is using this tool and how to improve it. Fields marked <span style="color:#f87171">*</span> are required.</p>
-
-      <!-- ── Personal Details ── -->
-      <div class="reg-sec">Personal Details</div>
-      <div class="reg-grid">
-        <div class="reg-field">
-          <label for="reg_name">Full Name <span style="color:#f87171">*</span></label>
-          <input id="reg_name" type="text" placeholder="e.g. Jane Smith" autocomplete="name" maxlength="120"/>
-        </div>
-        <div class="reg-field">
-          <label for="reg_email">Email Address <span style="color:#f87171">*</span></label>
-          <input id="reg_email" type="email" placeholder="e.g. jane@example.com" autocomplete="email" maxlength="150"/>
-        </div>
-        <div class="reg-field">
-          <label for="reg_phone">Phone Number</label>
-          <input id="reg_phone" type="tel" placeholder="e.g. +1 441 555 0100" autocomplete="tel" maxlength="30"/>
-        </div>
-        <div class="reg-field">
-          <label for="reg_institution">Institution / School / Organisation</label>
-          <input id="reg_institution" type="text" placeholder="e.g. Bermuda College" maxlength="150"/>
-        </div>
-      </div>
+      <p class="reg-intro">Please complete the short profile below before you begin. Your anonymous responses help the <strong style="color:#4ade80">Bermuda Department of Energy</strong> understand who is using this tool and improve energy literacy programmes.</p>
 
       <!-- ── Demographic profile (mirrors the paper form) ── -->
       <div class="reg-sec">Profile</div>
@@ -496,17 +475,14 @@ header{border-radius:16px}
             <label><input type="checkbox" name="reg_interest" value="Geography"> Geography</label>
             <label><input type="checkbox" name="reg_interest" value="IT"> IT</label>
             <label><input type="checkbox" name="reg_interest" value="Finance"> Finance</label>
-            <label><input type="checkbox" name="reg_interest" value="Other"> Other</label>
+            <label><input type="checkbox" name="reg_interest" value="Engineering"> Engineering</label>
+            <label><input type="checkbox" name="reg_interest" value="Policy"> Policy</label>
+            <label><input type="checkbox" name="reg_interest" value="Political Science"> Political Science</label>
+            <label><input type="checkbox" name="reg_interest" value="Environmental"> Environmental</label>
           </div>
         </div>
 
       </div><!-- /reg-demo-grid -->
-
-      <!-- ── Consent ── -->
-      <div class="reg-consent">
-        <input type="checkbox" id="reg_consent"/>
-        <label for="reg_consent">I agree that my responses may be collected and used by the <strong>Bermuda Department of Energy</strong> to monitor usage of this educational tool and improve energy literacy programmes. My data will not be shared with third parties.</label>
-      </div>
 
       <div id="regError" class="reg-error"></div>
 
@@ -2508,22 +2484,11 @@ initializeApplicationState();
     errorBox.classList.remove('show');
 
     /* ── collect values ── */
-    const name        = document.getElementById('reg_name').value.trim();
-    const email       = document.getElementById('reg_email').value.trim();
-    const phone       = document.getElementById('reg_phone').value.trim();
-    const institution = document.getElementById('reg_institution').value.trim();
-    const age         = document.querySelector('input[name="reg_age"]:checked')?.value   || '';
-    const gender      = document.querySelector('input[name="reg_gender"]:checked')?.value || '';
-    const level       = document.querySelector('input[name="reg_level"]:checked')?.value  || '';
-    const interests   = [...document.querySelectorAll('input[name="reg_interest"]:checked')]
-                          .map(el=>el.value).join(', ');
-    const consented   = document.getElementById('reg_consent').checked;
-
-    /* ── validation ── */
-    if(!name)          return showError('Please enter your full name.');
-    if(!email)         return showError('Please enter your email address.');
-    if(!validateEmail(email)) return showError('Please enter a valid email address (e.g. jane@example.com).');
-    if(!consented)     return showError('Please tick the consent box to continue.');
+    const age       = document.querySelector('input[name="reg_age"]:checked')?.value    || '';
+    const gender    = document.querySelector('input[name="reg_gender"]:checked')?.value || '';
+    const level     = document.querySelector('input[name="reg_level"]:checked')?.value  || '';
+    const interests = [...document.querySelectorAll('input[name="reg_interest"]:checked')]
+                        .map(el=>el.value).join(', ');
 
     /* ── disable button while saving ── */
     submitBtn.disabled=true;
@@ -2531,15 +2496,10 @@ initializeApplicationState();
 
     /* ── save to database ── */
     await db_saveUser({
-      full_name    :name,
-      email        :email,
-      phone        :phone       ||null,
-      institution  :institution ||null,
-      age_bracket  :age         ||null,
-      gender       :gender      ||null,
-      learner_level:level       ||null,
-      interests    :interests   ||null,
-      consented    :true,
+      age_bracket  :age       ||null,
+      gender       :gender    ||null,
+      learner_level:level     ||null,
+      interests    :interests ||null,
       registered_at:new Date().toISOString()
     });
 

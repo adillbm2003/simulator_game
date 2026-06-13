@@ -179,16 +179,15 @@
       <div class="sec-head">
         <div class="sec-title">Registered Users</div>
         <span class="sec-count" id="uCount">0</span>
-        <input class="search" id="uSearch" type="text" placeholder="Search name or email…">
+        <input class="search" id="uSearch" type="text" placeholder="Search age, level or interest…">
         <button class="exp-btn" id="expBtn">⬇ Export CSV</button>
       </div>
       <div class="tbl-wrap">
         <table>
           <thead>
             <tr>
-              <th>#</th><th>Full Name</th><th>Email</th><th>Phone</th>
-              <th>Institution</th><th>Age</th><th>Gender</th><th>Level</th>
-              <th>Interests</th><th>Registered</th>
+              <th>#</th><th>Age Bracket</th><th>Gender</th><th>Learner Level</th>
+              <th>Area of Interest</th><th>Registered</th>
             </tr>
           </thead>
           <tbody id="uBody"></tbody>
@@ -274,7 +273,7 @@ async function loadAll() {
   ]);
   allUsers    = ur.data || [];
   allSessions = sr.data || [];
-  userMap     = Object.fromEntries(allUsers.map(u => [u.id, u.full_name]));
+  userMap     = Object.fromEntries(allUsers.map(u => [u.id, u.registered_at]));
   renderStats(); renderUsers(); renderSessions();
 }
 
@@ -291,23 +290,20 @@ function set(id, v) { document.getElementById(id).textContent = v; }
 function renderUsers(q = '') {
   const rows = q
     ? allUsers.filter(u =>
-        (u.full_name || '').toLowerCase().includes(q) ||
-        (u.email     || '').toLowerCase().includes(q))
+        (u.age_bracket   || '').toLowerCase().includes(q) ||
+        (u.learner_level || '').toLowerCase().includes(q) ||
+        (u.interests     || '').toLowerCase().includes(q))
     : allUsers;
   set('uCount', rows.length);
   const tb = document.getElementById('uBody');
-  if (!rows.length) { tb.innerHTML = `<tr><td colspan="10"><div class="empty">No registrations yet — they will appear here in real time.</div></td></tr>`; return; }
+  if (!rows.length) { tb.innerHTML = `<tr><td colspan="6"><div class="empty">No registrations yet — they will appear here in real time.</div></td></tr>`; return; }
   tb.innerHTML = rows.map((u, i) => `
     <tr>
       <td style="color:var(--muted);font-size:12px">${i+1}</td>
-      <td><strong>${x(u.full_name)}</strong></td>
-      <td>${x(u.email)}</td>
-      <td>${x(u.phone) || `<span class="dash">—</span>`}</td>
-      <td>${x(u.institution) || `<span class="dash">—</span>`}</td>
-      <td>${u.age_bracket ? `<span class="badge bb">${x(u.age_bracket)}</span>` : '—'}</td>
-      <td>${x(u.gender) || '—'}</td>
-      <td>${u.learner_level ? `<span class="badge bgr">${x(u.learner_level)}</span>` : '—'}</td>
-      <td style="max-width:160px;white-space:normal;font-size:12px">${x(u.interests) || '—'}</td>
+      <td>${u.age_bracket ? `<span class="badge bb">${x(u.age_bracket)}</span>` : '<span class="dash">—</span>'}</td>
+      <td>${x(u.gender) || '<span class="dash">—</span>'}</td>
+      <td>${u.learner_level ? `<span class="badge bgr">${x(u.learner_level)}</span>` : '<span class="dash">—</span>'}</td>
+      <td style="max-width:240px;white-space:normal;font-size:12px">${x(u.interests) || '<span class="dash">—</span>'}</td>
       <td style="color:var(--muted);white-space:nowrap;font-size:12px">${dt(u.registered_at)}</td>
     </tr>`).join('');
 }
@@ -343,7 +339,7 @@ function subscribeRealtime() {
   sb.channel('admin-realtime')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'users' }, ({ new: row }) => {
       allUsers.unshift(row);
-      userMap[row.id] = row.full_name;
+      userMap[row.id] = row.registered_at;
       renderStats();
       renderUsers(document.getElementById('uSearch').value.toLowerCase().trim());
       flash('uBody');
@@ -372,7 +368,7 @@ function flash(tbodyId) {
 
 /* ── EXPORT CSV ───────────────────────────────────── */
 document.getElementById('expBtn').addEventListener('click', () => {
-  const cols = ['full_name','email','phone','institution','age_bracket','gender','learner_level','interests','consented','registered_at'];
+  const cols = ['age_bracket','gender','learner_level','interests','registered_at'];
   const csv  = [cols.join(','), ...allUsers.map(u => cols.map(c => JSON.stringify(u[c] ?? '')).join(','))].join('\n');
   const a    = Object.assign(document.createElement('a'), {
     href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })),
