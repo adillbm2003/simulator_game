@@ -1684,10 +1684,16 @@ header{border-radius:16px}
    CREATE POLICY "anon insert sessions" ON sessions FOR INSERT WITH CHECK (true);
    CREATE POLICY "anon update sessions" ON sessions FOR UPDATE USING (true);
 ═══════════════════════════════════════════════════════════════ */
+/* ── REGISTRATION / DATA-CAPTURE TOGGLE ─────────────────────
+   Set to true to restore the on-load profile gate AND the anonymous
+   Supabase data capture. Left false: simulator opens directly, nothing
+   is collected. The registration UI + tracking code below stay in place
+   (hidden) so this can be flipped back on at any time. */
+const REGISTRATION_ENABLED=false;
 const DB_CONFIG={
   supabaseUrl: 'https://jnyzqpkelsuiczsfzbbp.supabase.co',
   supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpueXpxcGtlbHN1aWN6c2Z6YmJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjEyNzQsImV4cCI6MjA5NjkzNzI3NH0.7F74FksHdsYOSpYwMTglJvypRLouED6mNRPp5VCJAic',
-  enabled:     true
+  enabled:     REGISTRATION_ENABLED   // capture follows the toggle above
 };
 
 /* ─── internal state ─────────────────────────────── */
@@ -2472,6 +2478,9 @@ function initializeApplicationState(){
 buildHouse();
 initializeApplicationState();
 
+/* Registration gate + anonymous data capture — inert unless
+   REGISTRATION_ENABLED (top of script) is set to true. */
+if(REGISTRATION_ENABLED){
 /* ════════════════════════════════════════════════════
    REGISTRATION FLOW
 ════════════════════════════════════════════════════ */
@@ -2553,7 +2562,8 @@ document.getElementById('csvBtn').addEventListener('click',()=>{
 document.getElementById('pdfBtn').addEventListener('click',()=>{
   db_updateSession({exported_pdf:true});
 },true);
-// INITIALIZATION BUG FIX END
+}
+
 </script>
 </body>
 </html>
